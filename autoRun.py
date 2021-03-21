@@ -6,6 +6,12 @@ from time import sleep
 
 log_file = "/home/lichendi/out.log"
 
+def open3(command):
+    procExe = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+    while procExe.poll() is None:
+        line = procExe.stdout.readline()
+        print("Print:" + line, flush = True)
 
 def open0(command):
     import subprocess
@@ -71,9 +77,11 @@ def compileFake():
 # run BLAS-test
 def runTest():
     print("running test...")
-    result = open0('cd /home/lichendi/git/BLAS-test/build && cmake .. && make -j && make run')
+    #result = open0('cd /home/lichendi/git/BLAS-test/build && cmake .. && make -j && make run')
     #result = open1("cd /home/lichendi/git/BLAS-test/build && cmake .. && make -j && make run")
     #result = open2("cd /home/lichendi/git/BLAS-test/build && cmake .. && make -j && make run")
+    result = open3("cd /home/lichendi/git/BLAS-test/build && cmake .. && make -j && make run")
+    result = open3(".//compute")
     #result = execAndPrint("cd /home/lichendi/git/BLAS-test/build && cmake .. && make -j && make run")
     #result = subprocess_popen("cd /home/lichendi/git/BLAS-test/build && cmake .. && make -j && make run")
     #perf = os.system("cd /home/lichendi/git/BLAS-test/build && cmake .. && make -j && make run")
