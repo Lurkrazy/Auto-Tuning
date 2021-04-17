@@ -48,10 +48,15 @@ def tuneByConfig(configPath):
     print("all config:")
     print(allConfig)
 
+    p = 240
+    q = 240
     #tuning
-    for config in allConfig:
-        result = autoRun.autoTune(config)
+    #for config in allConfig:
+    for i in range(0, 21):
+        #print(config)
+        result = autoRun.autoTune(p, q, i)
+        print(result)
         #write config and result to files
-        writeResult(result, config)
+        #writeResult(result, config)
     #print("tune by config done!")
     return allConfig
