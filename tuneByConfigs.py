@@ -48,11 +48,11 @@ def tuneByConfig(configPath):
     print("all config:")
     print(allConfig)
 
-    p = 240
-    q = 240
+    p = 504
+    q = 1024
     #tuning
     #for config in allConfig:
-    for i in range(0, 21):
+    for i in range(0, 1):
         #print(config)
         result = autoRun.autoTune(p, q, i)
         print(result)

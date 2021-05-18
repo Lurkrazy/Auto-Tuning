@@ -6,8 +6,8 @@ import sys
 from time import sleep
 
 log_file = "/home/lichendi/out.log"
-packfile = "/home/lichendi/git/Fake_OpenBLAS/driver/level3/gemm_pack.c"
-computefile = "/home/lichendi/git/Fake_OpenBLAS/driver/level3/gemm_compute.c"
+packfile = "/home/lichendi/git/OpenBLAS_Kunpeng/driver/level3/gemm_pack.c"
+computefile = "/home/lichendi/git/OpenBLAS_Kunpeng/driver/level3/gemm_compute.c"
 #def open3(command):
 #    procExe = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 #
@@ -29,8 +29,8 @@ computefile = "/home/lichendi/git/Fake_OpenBLAS/driver/level3/gemm_compute.c"
 #    return "writed to logfile: " + log_file
 #
 #def open1(command):
-#    f = open(log_file, 'w+') 
-#    
+#    f = open(log_file, 'w+')
+#
 #    print("1")
 #    ret_val = subprocess.Popen(command, stdout=f, stderr=subprocess.PIPE, shell=True )
 #    print("2")
@@ -73,18 +73,27 @@ def execAndPrint(command):
 # compile multi-threaded Fake_OpenBLAS
 def compileFake():
     print("compiling Fake_OpenBLAS...")
-    compileLog = os.system("cd /home/lichendi/git/Fake_OpenBLAS && make -j FC=gfortran NO_LAPACK=1 USE_THREAD=0")
+    compileLog = os.system("cd /home/lichendi/git/OpenBLAS_Kunpeng && make clean && make -j FC=gfortran NO_LAPACK=1 USE_THREAD=1")
     return compileLog
 
 # run BLAS-test
 def runTest(p, q, i):
-    p = p + i * 8
+    p = p + i * 12
     q = q + i * 8
     print("running test...")
-    os.system("cd /home/lichendi/git/BLAS-test/build && make clear && cmake .. && make -j && make run")
-    result = os.system("mv /home/lichendi/git/BLAS-test/output/out.txt /home/lichendi/git/BLAS-test/output/P"+str(p)+"Q"+str(q)+".txt")
-
+    os.system("cd /home/lichendi/git/BLAS-test/build && make clear")
+    os.system("cd /home/lichendi/git/BLAS-test/build && cmake .. && make -j && make run")
+    result = os.system("mv /home/lichendi/git/BLAS-test/output/out.txt /home/lichendi/git/BLAS-test/output/P"+str(p)+"Q"+str(q)+"_"+str(i)+".txt")
     return result
+
+# run BLAS-test
+def runTestFixPQ(p, q, i):
+    print("running test... i = "+ str(i)+ " P = "+str(p)+" Q = "+str(q))
+    os.system("cd /home/lichendi/git/BLAS-test/build && make clear")
+    result1 = os.system("cd /home/lichendi/git/BLAS-test/build && cmake .. && make -j && make run")
+    result2 = os.system("mv /home/lichendi/git/BLAS-test/output/out.txt /home/lichendi/git/BLAS-test/output/P"+str(p)+"Q"+str(q)+"_"+str(i)+".txt")
+    return result1 or result2
+
 
 def alter(file, old_str, new_str):
     file_data = ""
@@ -97,15 +106,18 @@ def alter(file, old_str, new_str):
         f.write(file_data)
 
 def testACC(p, q, i):
-    p = p + i * 8
+    p = p + i * 12
     q = q + i * 8
     print("running ACC test...")
-    os.system("cd /home/lichendi/git/ACC_BLAS/build && make clear && cmake .. && make -j && make run")
-    result = os.system("mv /home/lichendi/git/ACC_BLAS/output/out.txt /home/lichendi/git/ACC_BLAS/output/P"+str(p)+"Q"+str(q)+".txt")
-    return result
+    os.system("cd /home/lichendi/git/ACC_BLAS/build && make clear")
+    result1 = os.system("cd /home/lichendi/git/ACC_BLAS/build && cmake .. && make -j && make run")
+    #different p and q
+    result2 = os.system("mv /home/lichendi/git/ACC_BLAS/output/out.txt /home/lichendi/git/ACC_BLAS/output/P"+str(p)+"Q"+str(q)+".txt")
+    #test specific p and q
+    return result1 or result2
 
 def modifyByConfig(p, q, i):
-    p = p + i * 8
+    p = p + i * 12
     q = q + i * 8
     alter(packfile, "define GEMM_P", "#define GEMM_P " + str(p) + "\n")
     alter(packfile, "define GEMM_Q", "#define GEMM_Q " + str(q) + "\n")
@@ -119,21 +131,38 @@ def modifyByConfig(p, q, i):
 def autoTune(p, q, i):
     modifyByConfig(p, q, i)
     print("modify by p, q, i done!")
-    print("sleep 1s")
     sleep(1)
 
     if not compileFake():
         print("compile done!")
-    print("sleep 1s")
-    sleep(1)
-
-    if not testACC(p, q, i):
-        print("ACC test done!")
-    print("sleep 1s")
-    sleep(1)
-
-    if not runTest(p, q, i):
-        print("test done!")
-        return "auto-tuning done!"
     else:
-        return "auto-tuning fail!"
+        print("compile failed!")
+        exit()
+
+    sleep(1)
+
+    #if not testACC(p, q, i):
+    #    print("ACC test done!")
+    #else:
+    #    print("ACC test failed!")
+    #    exit()
+
+    sleep(1)
+
+    #test different P and Q
+    #if not runTest(p, q, i):
+    #    print("test done!")
+    #    return "auto-tuning done!"
+    #else:
+    #    return "auto-tuning fail!"
+
+
+    #repeat test for one P and Q
+    for ite in range(5, 50):
+        if not runTestFixPQ(p, q, ite):
+            print("done!")
+        else:
+            print("performance test fail!")
+            exit()
+
+    return "done!"
