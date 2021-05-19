@@ -6,8 +6,8 @@ import sys
 from time import sleep
 
 log_file = "/home/lichendi/out.log"
-packfile = "/home/lichendi/git/OpenBLAS_Kunpeng/driver/level3/gemm_pack.c"
-computefile = "/home/lichendi/git/OpenBLAS_Kunpeng/driver/level3/gemm_compute.c"
+packfile = "/home/lichendi/git/Fake_OpenBLAS/driver/level3/gemm_pack.c"
+computefile = "/home/lichendi/git/Fake_OpenBLAS/driver/level3/gemm_compute.c"
 #def open3(command):
 #    procExe = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 #
@@ -73,7 +73,7 @@ def execAndPrint(command):
 # compile multi-threaded Fake_OpenBLAS
 def compileFake():
     print("compiling Fake_OpenBLAS...")
-    compileLog = os.system("cd /home/lichendi/git/OpenBLAS_Kunpeng && make clean && make -j FC=gfortran NO_LAPACK=1 USE_THREAD=1")
+    compileLog = os.system("cd /home/lichendi/git/Fake_OpenBLAS && make clean && make -j FC=gfortran NO_LAPACK=1 USE_THREAD=1")
     return compileLog
 
 # run BLAS-test
@@ -158,7 +158,7 @@ def autoTune(p, q, i):
 
 
     #repeat test for one P and Q
-    for ite in range(5, 50):
+    for ite in range(0, 50):
         if not runTestFixPQ(p, q, ite):
             print("done!")
         else:
